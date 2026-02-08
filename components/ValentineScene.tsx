@@ -27,11 +27,11 @@ const photoPath = (filename: string) => `/photos/${encodeURIComponent(filename)}
 
 const MEMORY_PHOTOS: MemoryPhoto[] = [
   { src: photoPath("IMG_0946.JPEG"), alt: "Memory photo 1", x: -136, y: -40, r: -14 },
-  { src: photoPath("IMG_1194.HEIC"), alt: "Memory photo 2", x: -94, y: -66, r: -9 },
-  { src: photoPath("IMG_1209.HEIC"), alt: "Memory photo 3", x: -40, y: -50, r: -4 },
-  { src: photoPath("IMG_3525.HEIC"), alt: "Memory photo 4", x: 16, y: -70, r: 1 },
-  { src: photoPath("IMG_4182.HEIC"), alt: "Memory photo 5", x: 72, y: -48, r: 6 },
-  { src: photoPath("IMG_4235.HEIC"), alt: "Memory photo 6", x: 130, y: -34, r: 11 },
+  { src: photoPath("IMG_1194.jpg"), alt: "Memory photo 2", x: -94, y: -66, r: -9 },
+  { src: photoPath("IMG_1209.jpg"), alt: "Memory photo 3", x: -40, y: -50, r: -4 },
+  { src: photoPath("IMG_3525.jpg"), alt: "Memory photo 4", x: 16, y: -70, r: 1 },
+  { src: photoPath("IMG_4182.jpg"), alt: "Memory photo 5", x: 72, y: -48, r: 6 },
+  { src: photoPath("IMG_4235.jpg"), alt: "Memory photo 6", x: 130, y: -34, r: 11 },
   { src: photoPath("IMG_5450.JPEG"), alt: "Memory photo 7", x: -2, y: 8, r: -2 },
   { src: photoPath("IMG_5524.jpg"), alt: "Memory photo 8", x: 90, y: 10, r: 7 }
 ];
