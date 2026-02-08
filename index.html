@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💌 For Diana</title>
+  <style>
+    :root{
+      --bg1:#fff7fb;
+      --bg2:#ffe4ee;
+      --ink:#1f2937;
+      --muted:rgba(31,41,55,.7);
+      --pink:#ec4899;
+      --rose:#fb7185;
+      --shadow:0 22px 70px rgba(31,41,55,.18);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      overflow:hidden;
+    }
+    .stage{
+      width:min(980px, 94vw);
+      padding:22px;
+      display:grid;
+      place-items:center;
+      gap:18px;
+    }
+
+    /* Animation card */
+    .anim-wrap{
+      width:min(820px, 94vw);
+      cursor:pointer;
+      user-select:none;
+      position:relative;
+    }
+    .frame{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transform-origin:center;
+      transition: transform .35s ease, filter .35s ease;
+    }
+    .anim-wrap:hover .frame{
+      transform: scale(1.01);
+      filter: saturate(1.02);
+    }
+
+    .hint{
+      position:absolute;
+      left:0; right:0;
+      bottom:12px;
+      text-align:center;
+      font-weight:700;
+      color: rgba(31,41,55,.75);
+      text-shadow: 0 2px 18px rgba(255,255,255,.9);
+      pointer-events:none;
+    }
+    .hint small{
+      display:inline-block;
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(236,72,153,.18);
+      backdrop-filter: blur(8px);
+      padding:10px 14px;
+      border-radius:999px;
+    }
+
+    /* The letter/question revealed after animation */
+    .letter{
+      width:min(760px, 94vw);
+      display:none;
+      background: rgba(255,255,255,.75);
+      border:1px solid rgba(236,72,153,.18);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      padding:20px 18px;
+      text-align:center;
+    }
+
+    .photo-strip{
+      margin: 8px auto 14px;
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom:6px;
+      justify-content:flex-start;
+    }
+    .photo{
+      flex:0 0 170px;
+      height:120px;
+      border-radius:18px;
+      background: rgba(31,41,55,.06);
+      border:1px solid rgba(31,41,55,.08);
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+      color: rgba(31,41,55,.55);
+      font-size:12px;
+    }
+    .photo img{width:100%; height:100%; object-fit:cover; display:block;}
+
+    h2{
+      margin:10px 0 6px;
+      font-size: clamp(20px, 2.7vw, 30px);
+    }
+    p{margin:0; color:var(--muted)}
+    .actions{
+      margin-top:16px;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    button{
+      border:none;
+      padding:12px 16px;
+      border-radius:999px;
+      font-weight:800;
+      cursor:pointer;
+      transition: transform .08s ease, box-shadow .2s ease;
+      font-size:16px;
+    }
+    .yes{
+      background: linear-gradient(135deg, var(--pink), var(--rose));
+      color:white;
+      box-shadow: 0 14px 36px rgba(236,72,153,.30);
+    }
+    .no{
+      background: rgba(31,41,55,.06);
+      border:1px solid rgba(31,41,55,.12);
+      color: var(--ink);
+    }
+    .yes:hover,.no:hover{transform: translateY(-1px);}
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      place-items:center;
+      background: rgba(17,24,39,.50);
+      padding:18px;
+      z-index:50;
+    }
+    .modal-inner{
+      width:min(560px, 92vw);
+      background:white;
+      border-radius: 24px;
+      padding:22px;
+      text-align:center;
+      box-shadow: 0 25px 90px rgba(0,0,0,.25);
+    }
+    .modal-inner .emoji{font-size:48px}
+    .modal-inner h3{margin:10px 0 6px; font-size:22px}
+    .modal-inner p{margin:0 0 14px; color:var(--muted)}
+    .close{ background: rgba(31,41,55,.08); }
+
+    /* Confetti */
+    canvas#confetti{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:60;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Click-to-open animation using your 4 frames -->
+    <div class="anim-wrap" id="animWrap" role="button" tabindex="0" aria-label="Open envelope">
+      <img class="frame" id="frameImg" src="frame1.png" alt="Envelope" />
+      <div class="hint" id="hint"><small>Click to open 💌</small></div>
+    </div>
+
+    <!-- Revealed after animation finishes -->
+    <div class="letter" id="letter">
+      <div class="photo-strip">
+        <!-- Replace these with your real images, or delete this strip if you don’t want photos -->
+        <div class="photo"><img src="photo1.jpg" alt="Us 1" onerror="this.remove(); this.parentElement.textContent='Add photo1.jpg';"></div>
+        <div class="photo"><img src="photo2.jpg" alt="Us 2" onerror="this.remove(); this.parentElement.textContent='Add photo2.jpg';"></div>
+        <div class="photo"><img src="photo3.jpg" alt="Us 3" onerror="this.remove(); this.parentElement.textContent='Add photo3.jpg';"></div>
+        <div class="photo"><img src="photo4.jpg" alt="Us 4" onerror="this.remove(); this.parentElement.textContent='Add photo4.jpg';"></div>
+      </div>
+
+      <h2>Will you be my Valentine? 💘</h2>
+      <p>(I’m hoping you say yes 😌)</p>
+
+      <div class="actions">
+        <button class="yes" id="yesBtn">Yes 💖</button>
+        <button class="no" id="noBtn">No 🙃</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <div class="modal" id="modal">
+    <div class="modal-inner">
+      <div class="emoji">🥰🎉💞</div>
+      <h3>YAYYYY!!</h3>
+      <p>You just made me the happiest person ever.</p>
+      <button class="close" id="closeBtn">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Frame animation setup ---
+    const frames = ["frame1.png", "frame2.png", "frame3.png", "frame4.png"]; // your 4 images
+    const frameImg = document.getElementById("frameImg");
+    const animWrap = document.getElementById("animWrap");
+    const hint = document.getElementById("hint");
+    const letter = document.getElementById("letter");
+
+    let playing = false;
+
+    // Preload frames so it looks instant
+    frames.forEach(src => { const i = new Image(); i.src = src; });
+
+    function playAnimation(){
+      if (playing) return;
+      playing = true;
+      hint.style.display = "none";
+
+      let idx = 0;
+
+      // little “zoom in” as it opens
+      frameImg.style.transform = "scale(1.02)";
+
+      const step = () => {
+        frameImg.src = frames[idx];
+
+        // tweak timing for a nicer “opening” feel
+        const delay = (idx === 0) ? 260 : (idx === 1) ? 320 : (idx === 2) ? 340 : 0;
+
+        idx++;
+        if (idx < frames.length) {
+          setTimeout(step, delay);
+        } else {
+          // Final frame stays + show letter/question
+          frameImg.style.transform = "scale(1)";
+          setTimeout(() => {
+            letter.style.display = "block";
+            letter.scrollIntoView({behavior:"smooth", block:"center"});
+          }, 250);
+        }
+      };
+
+      step();
+    }
+
+    animWrap.addEventListener("click", playAnimation);
+    animWrap.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") playAnimation();
+    });
+
+    // --- Buttons ---
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn  = document.getElementById("noBtn");
+    const modal  = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeBtn");
+
+    // Playful “No” dodge
+    let dodges = 0;
+    noBtn.addEventListener("mouseenter", () => {
+      dodges++;
+      const maxX = Math.min(window.innerWidth - 160, 520);
+      const maxY = Math.min(window.innerHeight - 160, 340);
+      const x = (Math.random() * maxX) - maxX/2;
+      const y = (Math.random() * maxY) - maxY/2;
+      noBtn.style.transform = `translate(${x}px, ${y}px)`;
+      if (dodges >= 3) noBtn.textContent = "Okay… yes 😅";
+    });
+
+    // Confetti
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    let W, H, pieces = [], anim;
+
+    function resize(){
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    function launchConfetti(){
+      cancelAnimationFrame(anim);
+      pieces = Array.from({ length: 180 }, () => ({
+        x: Math.random() * W,
+        y: -20 - Math.random() * H * 0.2,
+        s: 2 + Math.random() * 4,
+        vy: 2 + Math.random() * 4,
+        vx: -2 + Math.random() * 4,
+        a: Math.random() * Math.PI * 2,
+        va: -0.2 + Math.random() * 0.4,
+        hue: Math.floor(Math.random() * 360)
+      }));
+      draw();
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      pieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.a += p.va;
+        p.vy += 0.02;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.a);
+        ctx.fillStyle = `hsl(${p.hue}, 90%, 65%)`;
+        ctx.fillRect(-p.s, -p.s, p.s*2, p.s*2);
+        ctx.restore();
+      });
+      pieces = pieces.filter(p => p.y < H + 40);
+      if (pieces.length) anim = requestAnimationFrame(draw);
+    }
+
+    yesBtn.addEventListener("click", () => {
+      modal.style.display = "grid";
+      launchConfetti();
+    });
+
+    closeBtn.addEventListener("click", () => modal.style.display = "none");
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.style.display = "none";
+    });
+  </script>
+</body>
+</html>
