@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { MouseEvent, PointerEvent, TouchEvent } from "react";
 
 const MY_NAME = "Eduardo";
 const HER_NAME = "Diana Angelina Sanchez";
@@ -15,7 +14,6 @@ const NO_BUTTON_LABELS = [
 ];
 
 const NO_BUTTON_SCALE = [1, 0.82, 0.66, 0.5];
-const DEBUG_EVENT_LOG = true;
 
 type MemoryPhoto = {
   src: string;
@@ -55,30 +53,7 @@ export function ValentineScene() {
   const [isAccepted, setIsAccepted] = useState(false);
   const [gifLoadError, setGifLoadError] = useState(false);
   const [noStep, setNoStep] = useState(0);
-  const [eventLog, setEventLog] = useState<string[]>([]);
   const lastActionTimeRef = useRef({ yes: 0, no: 0 });
-
-  const pushEventLog = (message: string) => {
-    if (!DEBUG_EVENT_LOG) {
-      return;
-    }
-
-    const stamp = new Date().toLocaleTimeString("en-US", { hour12: false });
-    setEventLog((current) => [`${stamp}  ${message}`, ...current].slice(0, 18));
-  };
-
-  const describeTarget = (target: EventTarget | null) => {
-    if (!(target instanceof Element)) {
-      return "unknown";
-    }
-
-    const idPart = target.id ? `#${target.id}` : "";
-    const classes =
-      target.classList.length > 0
-        ? `.${Array.from(target.classList).slice(0, 3).join(".")}`
-        : "";
-    return `${target.tagName.toLowerCase()}${idPart}${classes}`;
-  };
 
   useEffect(() => {
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -310,7 +285,6 @@ export function ValentineScene() {
   }, [isReducedMotion]);
 
   const handleNoPress = () => {
-    pushEventLog(`NO action fired (step ${noStep} -> ${Math.min(noStep + 1, 4)})`);
     setNoStep((current) => {
       if (current >= 4) {
         return current;
@@ -320,7 +294,6 @@ export function ValentineScene() {
   };
 
   const handleYesPress = async () => {
-    pushEventLog("YES action fired");
     setIsAccepted(true);
     setGifLoadError(false);
 
@@ -355,7 +328,6 @@ export function ValentineScene() {
   ) => {
     const now = Date.now();
     if (now - lastActionTimeRef.current[key] < 240) {
-      pushEventLog(`${key.toUpperCase()} blocked by dedupe`);
       return;
     }
     lastActionTimeRef.current[key] = now;
@@ -390,8 +362,7 @@ export function ValentineScene() {
   const tryFallbackActivation = (
     x: number,
     y: number,
-    target: EventTarget | null,
-    source: string
+    target: EventTarget | null
   ) => {
     if (!isCtaInteractive()) {
       return;
@@ -403,7 +374,6 @@ export function ValentineScene() {
 
     const yesRect = yesButtonRef.current?.getBoundingClientRect();
     if (yesRect && isPointInside(x, y, yesRect)) {
-      pushEventLog(`${source} fallback hit YES`);
       activateYes();
       return;
     }
@@ -414,7 +384,6 @@ export function ValentineScene() {
 
     const noRect = noButtonRef.current?.getBoundingClientRect();
     if (noRect && isPointInside(x, y, noRect)) {
-      pushEventLog(`${source} fallback hit NO`);
       activateNo();
     }
   };
@@ -425,28 +394,18 @@ export function ValentineScene() {
         ref={sectionRef}
         className={`relative overflow-hidden ${isReducedMotion ? "min-h-screen" : "h-[400vh]"}`}
         aria-label="Valentine envelope scroll scene"
-        onPointerDownCapture={(event: PointerEvent<HTMLElement>) => {
-          pushEventLog(
-            `scene pointerdown [${event.pointerType}] -> ${describeTarget(event.target)}`
-          );
-          tryFallbackActivation(event.clientX, event.clientY, event.target, "pointerdown");
+        onPointerDownCapture={(event) => {
+          tryFallbackActivation(event.clientX, event.clientY, event.target);
         }}
-        onTouchStartCapture={(event: TouchEvent<HTMLElement>) => {
-          pushEventLog(`scene touchstart -> ${describeTarget(event.target)}`);
+        onTouchStartCapture={(event) => {
           const touchPoint = event.touches[0] ?? event.changedTouches[0];
           if (!touchPoint) {
             return;
           }
-          tryFallbackActivation(
-            touchPoint.clientX,
-            touchPoint.clientY,
-            event.target,
-            "touchstart"
-          );
+          tryFallbackActivation(touchPoint.clientX, touchPoint.clientY, event.target);
         }}
-        onClickCapture={(event: MouseEvent<HTMLElement>) => {
-          pushEventLog(`scene click(detail=${event.detail}) -> ${describeTarget(event.target)}`);
-          tryFallbackActivation(event.clientX, event.clientY, event.target, "click");
+        onClickCapture={(event) => {
+          tryFallbackActivation(event.clientX, event.clientY, event.target);
         }}
       >
         <div
@@ -561,22 +520,18 @@ export function ValentineScene() {
                               type="button"
                               className="cta-btn cta-btn-yes"
                               onPointerDown={(event) => {
-                                pushEventLog(`YES pointerdown -> ${describeTarget(event.target)}`);
                                 event.stopPropagation();
                                 activateYes();
                               }}
                               onTouchStart={(event) => {
-                                pushEventLog(`YES touchstart -> ${describeTarget(event.target)}`);
                                 event.stopPropagation();
                                 activateYes();
                               }}
                               onClick={() => {
-                                pushEventLog("YES click");
                                 activateYes();
                               }}
                               onKeyDown={(event) => {
                                 if (event.key === "Enter" || event.key === " ") {
-                                  pushEventLog(`YES keydown(${event.key})`);
                                   activateYes();
                                 }
                               }}
@@ -590,22 +545,18 @@ export function ValentineScene() {
                                 type="button"
                                 className="cta-btn cta-btn-no"
                                 onPointerDown={(event) => {
-                                  pushEventLog(`NO pointerdown -> ${describeTarget(event.target)}`);
                                   event.stopPropagation();
                                   activateNo();
                                 }}
                                 onTouchStart={(event) => {
-                                  pushEventLog(`NO touchstart -> ${describeTarget(event.target)}`);
                                   event.stopPropagation();
                                   activateNo();
                                 }}
                                 onClick={() => {
-                                  pushEventLog("NO click");
                                   activateNo();
                                 }}
                                 onKeyDown={(event) => {
                                   if (event.key === "Enter" || event.key === " ") {
-                                    pushEventLog(`NO keydown(${event.key})`);
                                     activateNo();
                                   }
                                 }}
@@ -638,33 +589,6 @@ export function ValentineScene() {
           </div>
         </div>
       </section>
-      {DEBUG_EVENT_LOG ? (
-        <aside className="event-log-panel" aria-live="polite" aria-label="Temporary interaction log">
-          <div className="event-log-head">
-            <strong>Event Log</strong>
-            <button
-              type="button"
-              className="event-log-clear"
-              onClick={() => {
-                setEventLog([]);
-              }}
-            >
-              Clear
-            </button>
-          </div>
-          <div className="event-log-body">
-            {eventLog.length === 0 ? (
-              <p className="event-log-empty">No events yet.</p>
-            ) : (
-              eventLog.map((item, index) => (
-                <p key={`${item}-${index}`} className="event-log-line">
-                  {item}
-                </p>
-              ))
-            )}
-          </div>
-        </aside>
-      ) : null}
     </>
   );
 }
