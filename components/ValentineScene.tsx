@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const MY_NAME = "Eduardo";
-const HER_NAME = "Diana Angelina Sanchez";
+const MY_NAME = "Your Love";
+const HER_NAME = "My Love, Diana Angelina Sanchez";
 const YES_GIF_SRC = "https://media1.tenor.com/m/mfC-cc_TL_sAAAAC/thank-you.gif";
 
 const NO_BUTTON_LABELS = [
   "No",
-  "Was that a mistake",
+  "Was that a mistake?",
   "Are you serious?",
   "Are you sure? :("
 ];
