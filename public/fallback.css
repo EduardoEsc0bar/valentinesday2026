@@ -23,6 +23,7 @@ body {
 .relative { position: relative; }
 .overflow-hidden { overflow: hidden; }
 .h-\[400vh\] { height: 400vh; }
+.h-\[340vh\] { height: 340vh; }
 .flex { display: flex; }
 .h-screen { height: 100vh; }
 .items-center { align-items: center; }
@@ -36,6 +37,7 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 2;
+  overflow: visible;
 }
 
 .scene-bg-orb {
@@ -67,6 +69,7 @@ body {
   aspect-ratio: 5 / 3.35;
   perspective: 1800px;
   -webkit-perspective: 1800px;
+  overflow: visible;
 }
 
 .envelope-3d {
@@ -78,6 +81,8 @@ body {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform;
+  transform: translateZ(0);
+  overflow: visible;
 }
 
 .envelope-face {
@@ -160,6 +165,7 @@ body {
   inset: 0;
   display: flex;
   justify-content: center;
+  align-items: center;
   pointer-events: auto;
 }
 
@@ -169,6 +175,10 @@ body {
   z-index: 3;
   pointer-events: none;
   will-change: transform, opacity;
+}
+
+.photo-deck-accepted {
+  transform: translateY(-12vh) scale(1) !important;
 }
 
 .memory-photo {
@@ -192,6 +202,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: translateZ(0);
 }
 
 .letter-card {
@@ -214,6 +225,26 @@ body {
   flex-direction: column;
   justify-content: center;
   gap: 0.95rem;
+}
+
+.letter-card-accepted {
+  margin-top: 0;
+  width: min(90%, 430px);
+  min-height: clamp(260px, 62vh, 480px);
+  max-height: 82vh;
+  justify-content: center;
+  overflow: visible;
+  transform: translateY(0) scale(1.02) !important;
+}
+
+.letter-card-accepted .letter-title {
+  font-size: clamp(1.35rem, 4vw, 1.9rem);
+}
+
+.letter-card-accepted .yes-gif {
+  width: min(100%, 340px);
+  max-height: min(58vh, 420px);
+  object-fit: contain;
 }
 
 .letter-title {
@@ -403,6 +434,52 @@ body {
   .cta-btn {
     padding: 0.52rem 0.95rem;
     font-size: 0.88rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .scene-bg-orb {
+    filter: blur(34px);
+    opacity: 0.3;
+  }
+
+  .envelope-perspective {
+    perspective: 1400px;
+    -webkit-perspective: 1400px;
+  }
+
+  .envelope-face {
+    box-shadow: 0 10px 30px rgba(88, 39, 55, 0.18);
+  }
+
+  .memory-photo {
+    box-shadow: 0 8px 18px rgba(27, 15, 20, 0.16);
+    border-width: 1.5px;
+  }
+
+  .letter-card {
+    box-shadow: 0 10px 22px rgba(31, 23, 32, 0.14);
+  }
+
+  .letter-card-accepted {
+    width: min(92%, 390px);
+    min-height: clamp(220px, 56vh, 420px);
+    max-height: 76vh;
+    transform: translateY(0) scale(1) !important;
+  }
+
+  .photo-deck-accepted {
+    transform: translateY(-8vh) scale(1) !important;
+  }
+
+  .cta-btn {
+    box-shadow: 0 3px 10px rgba(28, 16, 21, 0.14);
+    transition-duration: 160ms;
+  }
+
+  .celebration-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 

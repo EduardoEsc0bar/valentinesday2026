@@ -50,6 +50,7 @@ export function ValentineScene() {
   const noButtonRef = useRef<HTMLButtonElement>(null);
 
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [isAccepted, setIsAccepted] = useState(false);
   const [gifLoadError, setGifLoadError] = useState(false);
   const [noStep, setNoStep] = useState(0);
@@ -80,6 +81,30 @@ export function ValentineScene() {
   }, []);
 
   useEffect(() => {
+    const coarsePointerQuery = window.matchMedia("(hover: none), (pointer: coarse)");
+
+    const updatePointerType = () => {
+      setIsCoarsePointer(coarsePointerQuery.matches);
+    };
+
+    updatePointerType();
+
+    if (coarsePointerQuery.addEventListener) {
+      coarsePointerQuery.addEventListener("change", updatePointerType);
+
+      return () => {
+        coarsePointerQuery.removeEventListener("change", updatePointerType);
+      };
+    }
+
+    coarsePointerQuery.addListener(updatePointerType);
+
+    return () => {
+      coarsePointerQuery.removeListener(updatePointerType);
+    };
+  }, []);
+
+  useEffect(() => {
     if (isReducedMotion) {
       return;
     }
@@ -97,6 +122,7 @@ export function ValentineScene() {
       const { gsap } = gsapModule;
       const { ScrollTrigger } = triggerModule;
       gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.config({ ignoreMobileResize: true });
 
       const ctx = gsap.context(() => {
         const photoCards = photoRefs.current.filter(
@@ -112,21 +138,31 @@ export function ValentineScene() {
           transformOrigin: "top center"
         });
         gsap.set(photoDeckRef.current, {
-          yPercent: 72,
-          scale: 0.8,
+          yPercent: isCoarsePointer ? 68 : 72,
+          scale: isCoarsePointer ? 0.92 : 0.8,
           autoAlpha: 0,
           zIndex: 3
         });
-        gsap.set(photoCards, {
-          x: 0,
-          y: 38,
-          rotation: 0,
-          scale: 0.55,
-          autoAlpha: 0
-        });
+        if (isCoarsePointer) {
+          gsap.set(photoCards, {
+            x: (index) => MEMORY_PHOTOS[index]?.x ?? 0,
+            y: (index) => (MEMORY_PHOTOS[index]?.y ?? 0) + 52,
+            rotation: (index) => MEMORY_PHOTOS[index]?.r ?? 0,
+            scale: 1,
+            autoAlpha: 0
+          });
+        } else {
+          gsap.set(photoCards, {
+            x: 0,
+            y: 38,
+            rotation: 0,
+            scale: 0.55,
+            autoAlpha: 0
+          });
+        }
         gsap.set(letterRef.current, {
           yPercent: 76,
-          scale: 0.9,
+          scale: isCoarsePointer ? 1 : 0.9,
           autoAlpha: 0,
           zIndex: 3
         });
@@ -145,8 +181,9 @@ export function ValentineScene() {
             start: "top top",
             end: "bottom bottom",
             pin: pinRef.current,
-            scrub: true,
-            anticipatePin: 1,
+            scrub: isCoarsePointer ? 0.22 : true,
+            anticipatePin: isCoarsePointer ? 0.65 : 1,
+            fastScrollEnd: true,
             invalidateOnRefresh: true
           }
         });
@@ -157,93 +194,170 @@ export function ValentineScene() {
         // Segment B (0.25 -> 0.45): back flap opens.
         timeline.to(flapRef.current, { rotationX: -165, duration: 0.2 }, 0.25);
 
-        // Segment C (0.45 -> 0.86): photo memories rise out one-by-one before the letter appears.
-        timeline.to(
-          photoDeckRef.current,
-          {
-            yPercent: -26,
-            scale: 1,
-            autoAlpha: 1,
-            ease: "power2.out",
-            duration: 0.22
-          },
-          0.45
-        );
-        timeline.to(
-          photoDeckRef.current,
-          {
-            zIndex: 6,
-            duration: 0.01
-          },
-          0.56
-        );
-        timeline.to(
-          photoCards,
-          {
-            x: (index) => MEMORY_PHOTOS[index]?.x ?? 0,
-            y: (index) => MEMORY_PHOTOS[index]?.y ?? 0,
-            rotation: (index) => MEMORY_PHOTOS[index]?.r ?? 0,
-            scale: 1.08,
-            autoAlpha: 1,
-            ease: "power3.out",
-            duration: 0.14,
-            stagger: 0.055
-          },
-          0.5
-        );
-        timeline.to(
-          photoCards,
-          {
-            scale: 1,
-            ease: "power1.out",
-            duration: 0.07,
-            stagger: 0.055
-          },
-          0.62
-        );
-        timeline.to(
-          pocketRef.current,
-          {
-            yPercent: 4,
-            ease: "power1.out",
-            duration: 0.2
-          },
-          0.55
-        );
+        if (isCoarsePointer) {
+          // iPhone-friendly path: fewer simultaneous transforms and shorter easing chain.
+          timeline.to(
+            photoDeckRef.current,
+            {
+              yPercent: -16,
+              scale: 1,
+              autoAlpha: 1,
+              ease: "power1.out",
+              duration: 0.2
+            },
+            0.45
+          );
+          timeline.to(
+            photoDeckRef.current,
+            {
+              zIndex: 6,
+              duration: 0.01
+            },
+            0.56
+          );
+          timeline.to(
+            photoCards,
+            {
+              y: (index) => MEMORY_PHOTOS[index]?.y ?? 0,
+              autoAlpha: 1,
+              ease: "power1.out",
+              duration: 0.22,
+              stagger: 0.06
+            },
+            0.52
+          );
+          timeline.to(
+            pocketRef.current,
+            {
+              yPercent: 3,
+              ease: "power1.out",
+              duration: 0.18
+            },
+            0.58
+          );
 
-        // Segment C (0.86 -> 0.92): reveal the letter after photos clear the envelope.
-        timeline.to(
-          letterRef.current,
-          {
-            zIndex: 8,
-            duration: 0.01
-          },
-          0.86
-        );
-        timeline.to(
-          letterRef.current,
-          {
-            yPercent: -82,
-            scale: 1.02,
-            autoAlpha: 1,
-            ease: "power2.out",
-            duration: 0.06
-          },
-          0.86
-        );
+          // Segment C (0.86 -> 0.92): reveal letter after memories.
+          timeline.to(
+            letterRef.current,
+            {
+              zIndex: 8,
+              duration: 0.01
+            },
+            0.86
+          );
+          timeline.to(
+            letterRef.current,
+            {
+              yPercent: -70,
+              scale: 1.04,
+              autoAlpha: 1,
+              ease: "power1.out",
+              duration: 0.06
+            },
+            0.86
+          );
 
-        // Segment D (0.92 -> 1.00): lock final max-size letter state and reveal CTA.
-        timeline.to(
-          letterRef.current,
-          {
-            yPercent: -58,
-            scale: 1.12,
-            autoAlpha: 1,
-            ease: "power1.out",
-            duration: 0.08
-          },
-          0.92
-        );
+          // Segment D (0.92 -> 1.00): final max-size letter state.
+          timeline.to(
+            letterRef.current,
+            {
+              yPercent: -58,
+              scale: 1.12,
+              autoAlpha: 1,
+              ease: "power1.out",
+              duration: 0.08
+            },
+            0.92
+          );
+        } else {
+          // Segment C (0.45 -> 0.86): photo memories rise out one-by-one before the letter appears.
+          timeline.to(
+            photoDeckRef.current,
+            {
+              yPercent: -26,
+              scale: 1,
+              autoAlpha: 1,
+              ease: "power2.out",
+              duration: 0.22
+            },
+            0.45
+          );
+          timeline.to(
+            photoDeckRef.current,
+            {
+              zIndex: 6,
+              duration: 0.01
+            },
+            0.56
+          );
+          timeline.to(
+            photoCards,
+            {
+              x: (index) => MEMORY_PHOTOS[index]?.x ?? 0,
+              y: (index) => MEMORY_PHOTOS[index]?.y ?? 0,
+              rotation: (index) => MEMORY_PHOTOS[index]?.r ?? 0,
+              scale: 1.08,
+              autoAlpha: 1,
+              ease: "power3.out",
+              duration: 0.14,
+              stagger: 0.055
+            },
+            0.5
+          );
+          timeline.to(
+            photoCards,
+            {
+              scale: 1,
+              ease: "power1.out",
+              duration: 0.07,
+              stagger: 0.055
+            },
+            0.62
+          );
+          timeline.to(
+            pocketRef.current,
+            {
+              yPercent: 4,
+              ease: "power1.out",
+              duration: 0.2
+            },
+            0.55
+          );
+
+          // Segment C (0.86 -> 0.92): reveal the letter after photos clear the envelope.
+          timeline.to(
+            letterRef.current,
+            {
+              zIndex: 8,
+              duration: 0.01
+            },
+            0.86
+          );
+          timeline.to(
+            letterRef.current,
+            {
+              yPercent: -82,
+              scale: 1.02,
+              autoAlpha: 1,
+              ease: "power2.out",
+              duration: 0.06
+            },
+            0.86
+          );
+
+          // Segment D (0.92 -> 1.00): lock final max-size letter state and reveal CTA.
+          timeline.to(
+            letterRef.current,
+            {
+              yPercent: -58,
+              scale: 1.12,
+              autoAlpha: 1,
+              ease: "power1.out",
+              duration: 0.08
+            },
+            0.92
+          );
+        }
         timeline.to(
           ctaRef.current,
           {
@@ -266,14 +380,14 @@ export function ValentineScene() {
         );
       }, sectionRef);
 
-      const onResize = () => {
+      const onOrientationChange = () => {
         ScrollTrigger.refresh();
       };
 
-      window.addEventListener("resize", onResize);
+      window.addEventListener("orientationchange", onOrientationChange);
 
       cleanup = () => {
-        window.removeEventListener("resize", onResize);
+        window.removeEventListener("orientationchange", onOrientationChange);
         ctx.revert();
       };
     })();
@@ -282,7 +396,7 @@ export function ValentineScene() {
       mounted = false;
       cleanup();
     };
-  }, [isReducedMotion]);
+  }, [isReducedMotion, isCoarsePointer]);
 
   const handleNoPress = () => {
     setNoStep((current) => {
@@ -345,6 +459,7 @@ export function ValentineScene() {
   const noButtonVisible = noStep < 4;
   const noButtonLabel = NO_BUTTON_LABELS[Math.min(noStep, NO_BUTTON_LABELS.length - 1)];
   const noButtonScale = NO_BUTTON_SCALE[Math.min(noStep, NO_BUTTON_SCALE.length - 1)];
+  const sceneHeightClass = isReducedMotion ? "min-h-screen" : (isCoarsePointer ? "h-[340vh]" : "h-[400vh]");
 
   const isPointInside = (x: number, y: number, rect: DOMRect) => (
     x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
@@ -392,7 +507,7 @@ export function ValentineScene() {
     <>
       <section
         ref={sectionRef}
-        className={`relative overflow-hidden ${isReducedMotion ? "min-h-screen" : "h-[400vh]"}`}
+        className={`relative ${sceneHeightClass}`}
         aria-label="Valentine envelope scroll scene"
         onPointerDownCapture={(event) => {
           tryFallbackActivation(event.clientX, event.clientY, event.target);
@@ -431,7 +546,7 @@ export function ValentineScene() {
                 <div className="envelope-face envelope-back">
                   <div
                     ref={photoDeckRef}
-                    className="photo-deck"
+                    className={`photo-deck ${isAccepted ? "photo-deck-accepted" : ""}`}
                     style={
                       isReducedMotion
                         ? { transform: "translateY(-26%) scale(1)", opacity: 1, zIndex: 6 }
@@ -473,7 +588,7 @@ export function ValentineScene() {
                   <div className="letter-anchor">
                     <article
                       ref={letterRef}
-                      className="letter-card"
+                      className={`letter-card ${isAccepted ? "letter-card-accepted" : ""}`}
                       style={
                         isReducedMotion
                           ? { transform: "translateY(-58%) scale(1.12)", opacity: 1, zIndex: 8 }
